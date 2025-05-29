@@ -1,0 +1,626 @@
+/* 
+
+body
+ ├─ .header
+ ├─ .container
+ │   ├─ .task-form
+ │   │   ├─ .form-grid
+ │   │   │   ├─ .form-group (y variantes)
+ │   │   └─ .form-actions
+ │   ├─ .filters
+ │   │   └─ .filter-group
+ │   └─ .board
+ │       ├─ .column
+ │       │   ├─ .column-header
+ │       │   │   ├─ .column-title
+ │       │   │   └─ .task-count
+ │       │   └─ .tasks-container
+ │       │       └─ .task-card
+ │       │           ├─ .task-header
+ │       │           ├─ .task-description
+ │       │           └─ .task-footer
+ │       │               ├─ .task-responsible
+ │       │               └─ .priority-badge
+ └─ .modal (emergente)
+     └─ .modal-content
+         ├─ .modal-header
+         └─ .modal-title
+
+
+Estilos, global, * { margin: 0; padding: 0; box-sizing: border-box; }: borra márgenes/paddings
+:root: define variables CSS, paleta de colores
+body: define fuente, fondo, color de texto y Versión body.dark-theme
+.header: Barra superior con fondo semitransparente, texto blanco, sombra, y botones como .theme-toggle
+.container: Contenedor principal con ancho máximo y padding
+ .task-form| .filters: Formulario de tareas y filtros con fondo semitransparente, bordes, padding, y sombra
+rganizado por .form-grid y .form-group
+ Inputs / Labels select con fondo translúcido, efecto focus, bordes suaves, etc.
+  Botones
+.btn-primary → color principal (teal)
+.btn-danger → botón rojo para eliminar
+.btn-secondary → fondo gris claro
+.boardSistema de columnas tipo Kanban (tres por fila, una por tipo de tarea).
+Cada .column contiene tarjetas (.task-card) dentro de .tasks-container
+.task-card
+Tarjeta con borde izquierdo de color, sombra, y animación slideIn
+.task-footer
+Pie de tarjeta con responsable (.task-responsible) y prioridad (.priority-badge)
+ .drop-zoneÁrea que acepta drag and drop
+.filters y .filter-group Barra de filtros con elementos agrupados
+.modalVentana flotante oculta (opacity: 0), visible con .show
+.notification Notificación flotante (éxito o error), animada con transform
+
+| Nivel | Elemento / Clase | Hijo directo de    | Contiene                                            |
+| ----- | ---------------- | ------------------ | --------------------------------------------------- |
+| 0     | `body`           | `html`             | `.header`, `.container`, `.modal`                   |
+| 1     | `.container`     | `body`             | `.task-form`, `.filters`, `.board`                  |
+| 2     | `.task-form`     | `.container`       | `.form-grid`, `.form-actions`                       |
+| 2     | `.board`         | `.container`       | `.column` (x3)                                      |
+| 3     | `.column`        | `.board`           | `.column-header`, `.tasks-container`                |
+| 4     | `.task-card`     | `.tasks-container` | `.task-header`, `.task-description`, `.task-footer` |
+| 5     | `.task-footer`   | `.task-card`       | `.task-responsible`, `.priority-badge`              |
+
+@keyframes slideIn: efecto al aparecer una tarjeta.
+@media (max-width: 768px): cambia columnas a una sola en móviles.
+
+*/
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --dark-slate: #3F4F59;
+    --sage-green: #AAC27F;
+    --teal: #148BA6;
+    --light-teal: #1FAFBF;
+    --orange: #F26B1D;
+    --white: #ffffff;
+    --light-gray: #f4f5f7;
+    --border-gray: #ddd;
+    --text-dark: #172b4d;
+    --text-light: #5e6c84;
+    
+    /* Dark theme colors */
+    --dark-primary: #1a1a2e;
+    --dark-secondary: #2c2c54;
+    --dark-accent: #ff4757;
+    --dark-accent-light: #ff6b7a;
+    --dark-silver: #e1e5e8;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background: linear-gradient(135deg, var(--sage-green), var(--teal));
+    min-height: 100vh;
+    color: var(--text-dark);
+}
+
+.header {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 1rem 2rem;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.theme-toggle {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.task-form {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+}
+
+input, textarea, select {
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    color: var(--text-dark);
+}
+
+input::placeholder, textarea::placeholder {
+    color: rgba(23, 43, 77, 0.6);
+}
+
+input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(20, 139, 166, 0.1);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.priority-select {
+    background: white;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.btn-primary {
+    background: var(--teal);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--light-teal);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: var(--light-gray);
+    color: var(--text-dark);
+}
+
+.btn-secondary:hover {
+    background: var(--border-gray);
+}
+
+.btn-danger {
+    background: var(--orange);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #e55a15;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.column {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    min-height: 400px;
+}
+
+.column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--light-gray);
+}
+
+.column-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-dark);
+}
+
+.task-count {
+    background: var(--teal);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.tasks-container {
+    min-height: 300px;
+    position: relative;
+}
+
+.task-card {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    cursor: move;
+    transition: all 0.2s;
+    border-left: 4px solid var(--teal);
+    animation: slideIn 0.3s ease-out;
+}
+
+.task-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+.task-card.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+.task-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    line-height: 1.3;
+}
+
+.task-actions {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.task-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    color: var(--text-light);
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.task-btn:hover {
+    background: var(--light-gray);
+    color: var(--text-dark);
+}
+
+.task-description {
+    color: var(--text-light);
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin-bottom: 0.75rem;
+}
+
+.task-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.task-responsible {
+    background: var(--sage-green);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.priority-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.priority-alta {
+    background: var(--orange);
+    color: white;
+}
+
+.priority-media {
+    background: #ffd93d;
+    color: var(--text-dark);
+}
+
+.priority-baja {
+    background: var(--sage-green);
+    color: white;
+}
+
+.drop-zone {
+    border: 2px dashed var(--teal);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    color: var(--teal);
+    background: rgba(20, 139, 166, 0.05);
+    margin: 0.5rem 0;
+    transition: all 0.2s;
+}
+
+.drop-zone.active {
+    background: rgba(20, 139, 166, 0.1);
+    border-color: var(--light-teal);
+}
+
+.filters {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.notification {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    z-index: 1000;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+}
+
+.notification.show {
+    transform: translateX(0);
+}
+
+.notification.success {
+    background: #10b981;
+}
+
+.notification.error {
+    background: var(--orange);
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+}
+
+.modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 2rem;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+    transform: scale(0.8);
+    transition: transform 0.3s;
+}
+
+.modal.show .modal-content {
+    transform: scale(1);
+}
+
+.modal-header {
+    margin-bottom: 1rem;
+}
+
+.modal-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+/* Dark Theme */
+body.dark-theme {
+    background: linear-gradient(135deg, var(--dark-primary), var(--dark-secondary));
+    color: var(--dark-silver);
+}
+
+body.dark-theme .header {
+    background: rgba(44, 44, 84, 0.9);
+    color: var(--dark-silver);
+}
+
+body.dark-theme .task-form,
+body.dark-theme .column,
+body.dark-theme .filters,
+body.dark-theme .modal-content {
+    background: rgba(44, 44, 84, 0.8);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 71, 87, 0.2);
+    color: var(--dark-silver);
+}
+
+body.dark-theme .task-card {
+    background: rgba(26, 26, 46, 0.9);
+    color: var(--dark-silver);
+    border-left: 4px solid var(--dark-accent);
+    border: 1px solid rgba(255, 71, 87, 0.3);
+}
+
+body.dark-theme .task-card:hover {
+    box-shadow: 0 4px 16px rgba(255, 71, 87, 0.2);
+    border-color: var(--dark-accent-light);
+}
+
+body.dark-theme input,
+body.dark-theme textarea,
+body.dark-theme select {
+    background: var(--dark-primary);
+    color: var(--dark-silver);
+    border-color: var(--dark-secondary);
+}
+
+body.dark-theme input:focus,
+body.dark-theme textarea:focus,
+body.dark-theme select:focus {
+    border-color: var(--dark-accent);
+    box-shadow: 0 0 0 3px rgba(255, 71, 87, 0.1);
+}
+
+body.dark-theme .btn-primary {
+    background: var(--dark-accent);
+    color: white;
+}
+
+body.dark-theme .btn-primary:hover {
+    background: var(--dark-accent-light);
+}
+
+body.dark-theme .task-count {
+    background: var(--dark-accent);
+    color: white;
+}
+
+body.dark-theme .drop-zone {
+    border-color: var(--dark-accent);
+    color: var(--dark-accent);
+    background: rgba(255, 71, 87, 0.05);
+}
+
+body.dark-theme .drop-zone.active {
+    background: rgba(255, 71, 87, 0.1);
+    border-color: var(--dark-accent-light);
+}
+
+body.dark-theme .column-header {
+    border-bottom-color: var(--dark-secondary);
+}
+
+body.dark-theme .column-title,
+body.dark-theme .task-title,
+body.dark-theme .modal-title,
+body.dark-theme label {
+    color: var(--dark-silver);
+}
+
+body.dark-theme .task-description {
+    color: rgba(225, 229, 232, 0.7);
+}
+
+body.dark-theme .task-btn:hover {
+    background: var(--dark-secondary);
+    color: var(--dark-silver);
+}
+
+body.dark-theme input::placeholder,
+body.dark-theme textarea::placeholder {
+    color: rgba(225, 229, 232, 0.5);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .board {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .container {
+        padding: 1rem;
+    }
+    
+    .filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

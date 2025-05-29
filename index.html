@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tablero de Tareas</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <h1>■ Tablero de Tareas</h1>
+        <button class="theme-toggle" id="themeToggle">● Modo Oscuro</button>
+    </header>
+
+    <div class="container">
+        <!-- Formulario para crear/editar tareas -->
+        <form class="task-form" id="taskForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="titulo">Título *</label>
+                    <input type="text" id="titulo" name="titulo" required>
+                </div>
+                <div class="form-group">
+                    <label for="responsable">Responsable *</label>
+                    <input type="text" id="responsable" name="responsable" required>
+                </div>
+                <div class="form-group full-width">
+                    <label for="descripcion">Descripción *</label>
+                    <textarea id="descripcion" name="descripcion" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="estado">Estado</label>
+                    <select id="estado" name="estado">
+                        <option value="pendiente">Pendiente</option>
+                        <option value="en progreso">En Progreso</option>
+                        <option value="terminada">Terminada</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="prioridad">Prioridad</label>
+                    <select id="prioridad" name="prioridad">
+                        <option value="baja">Baja</option>
+                        <option value="media">Media</option>
+                        <option value="alta">Alta</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" id="cancelBtn" class="btn-secondary" style="display: none;">Cancelar</button>
+                <button type="submit" id="submitBtn" class="btn-primary">Crear Tarea</button>
+            </div>
+        </form>
+
+        <!-- Filtros -->
+        <div class="filters">
+            <div class="filter-group">
+                <label for="filterResponsible">Filtrar por responsable:</label>
+                <select id="filterResponsible">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="filterPriority">Filtrar por prioridad:</label>
+                <select id="filterPriority">
+                    <option value="">Todas</option>
+                    <option value="alta">Alta</option>
+                    <option value="media">Media</option>
+                    <option value="baja">Baja</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <button type="button" id="clearFilters" class="btn-secondary">Limpiar Filtros</button>
+            </div>
+        </div>
+
+        <!-- Tablero de tareas -->
+        <div class="board">
+            <div class="column" data-estado="pendiente">
+                <div class="column-header">
+                    <span class="column-title">▋ Pendiente</span>
+                    <span class="task-count" id="count-pendiente">0</span>
+                </div>
+                <div class="tasks-container" id="tasks-pendiente"></div>
+            </div>
+
+            <div class="column" data-estado="en progreso">
+                <div class="column-header">
+                    <span class="column-title">▶ En Progreso</span>
+                    <span class="task-count" id="count-en progreso">0</span>
+                </div>
+                <div class="tasks-container" id="tasks-en progreso"></div>
+            </div>
+
+            <div class="column" data-estado="terminada">
+                <div class="column-header">
+                    <span class="column-title">■ Terminada</span>
+                    <span class="task-count" id="count-terminada">0</span>
+                </div>
+                <div class="tasks-container" id="tasks-terminada"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Confirmar eliminación</h3>
+            </div>
+            <p>¿Estás seguro de que deseas eliminar esta tarea? Esta acción no se puede deshacer.</p>
+            <div class="form-actions">
+                <button type="button" id="confirmCancel" class="btn-secondary">Cancelar</button>
+                <button type="button" id="confirmDelete" class="btn-danger">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificaciones -->
+    <div class="notification" id="notification"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

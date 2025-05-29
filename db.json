@@ -1,0 +1,124 @@
+{
+  "tareas": [
+    {
+      "id": "1",
+      "titulo": "Investigar drag and drop",
+      "descripcion": "Ver cómo implementar arrastre entre columnas",
+      "estado": "en progreso",
+      "responsable": "Lu",
+      "updatedAt": "2025-05-29T21:31:09.454Z"
+    },
+    {
+      "id": "2",
+      "titulo": "Diseñar estructura HTML",
+      "descripcion": "Crear el layout inicial del tablero de tareas",
+      "estado": "terminada",
+      "responsable": "Emma",
+      "updatedAt": "2025-05-28T19:24:33.154Z"
+    },
+    {
+      "id": "4",
+      "titulo": "Agregar validaciones al formulario",
+      "descripcion": "Evitar tareas vacías o sin responsable",
+      "estado": "pendiente",
+      "responsable": "Nico"
+    },
+    {
+      "id": "5",
+      "titulo": "Conectar con json-server",
+      "descripcion": "Consumir tareas desde el backend simulado",
+      "estado": "terminada",
+      "responsable": "Lu"
+    },
+    {
+      "id": "6",
+      "titulo": "Crear función para renderizar tareas",
+      "descripcion": "Mostrar tareas en columnas según su estado",
+      "estado": "terminada",
+      "responsable": "Mati",
+      "updatedAt": "2025-05-28T19:49:28.248Z"
+    },
+    {
+      "id": "7",
+      "titulo": "Agregar botón para eliminar tarea",
+      "descripcion": "Permitir borrar tareas con confirmación",
+      "estado": "pendiente",
+      "responsable": "Cami"
+    },
+    {
+      "id": "8",
+      "titulo": "Separar código en funciones",
+      "descripcion": "Evitar repetir lógica en varias partes",
+      "estado": "terminada",
+      "responsable": "Lu"
+    },
+    {
+      "id": "9",
+      "titulo": "Agregar contador de tareas por estado",
+      "descripcion": "Mostrar cuántas tareas hay en cada columna",
+      "estado": "pendiente",
+      "responsable": "Emma"
+    },
+    {
+      "id": "10",
+      "titulo": "Implementar edición de tareas",
+      "descripcion": "Permitir modificar título, descripción y estado",
+      "estado": "en progreso",
+      "responsable": "Sofi"
+    },
+    {
+      "id": "11",
+      "titulo": "Revisar errores en consola",
+      "descripcion": "Limpiar errores de JavaScript en el navegador",
+      "estado": "pendiente",
+      "responsable": "Nico"
+    },
+    {
+      "id": "12",
+      "titulo": "Subir proyecto a GitHub",
+      "descripcion": "Crear repositorio y subir código actualizado",
+      "estado": "terminada",
+      "responsable": "Lu"
+    },
+    {
+      "id": "13",
+      "titulo": "Crear README con instrucciones",
+      "descripcion": "Explicar cómo usar y correr el proyecto",
+      "estado": "pendiente",
+      "responsable": "Cami"
+    },
+    {
+      "id": "14",
+      "titulo": "Agregar estilos responsivos",
+      "descripcion": "Que se vea bien en celular",
+      "estado": "pendiente",
+      "responsable": "Mati"
+    },
+    {
+      "id": "15",
+      "titulo": "Agregar filtro por responsable",
+      "descripcion": "Mostrar solo tareas de una persona",
+      "estado": "en progreso",
+      "responsable": "Emma"
+    },
+    {
+      "id": "0bd1",
+      "titulo": "Laboratorista",
+      "descripcion": "hgfdsxvbnjhgfc nmjkhgfdc",
+      "estado": "en progreso",
+      "responsable": "amiiiii",
+      "prioridad": "media",
+      "createdAt": "2025-05-28T19:14:57.466Z"
+    },
+    {
+      "id": "e185",
+      "titulo": "Laboratorista",
+      "descripcion": "sertyhbvcxsdfgbv",
+      "estado": "terminada",
+      "responsable": "amiiiii",
+      "prioridad": "baja",
+      "createdAt": "2025-05-29T21:31:40.049Z",
+      "updatedAt": "2025-05-29T21:31:48.862Z"
+    }
+  ]
+}

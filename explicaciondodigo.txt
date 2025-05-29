@@ -1,0 +1,1015 @@
+class TaskAPI {
+    constructor() {
+        this.localURL = 'http://localhost:3000/tareas';
+        this.tasks = [];
+        this.useLocalAPI = true; // Siempre usar la API local
+    }
+/* task api es para manejar la logica de la coneccion con 
+con un contrutor que se crea cuando se inica une neva intancia de clase de la url
+con un arreglo vacion para guardar las tareas que se ontienen, y se pone como t para que se usa la api  loca, siempre*/
+    /* */
+    async getAllTasks() {
+        try {
+            const response = await fetch(this.localURL);
+            if (!response.ok) { //!response.ok si la respuesta NO fue exitosa, ! es el operador logico de negacion
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            this.tasks = await response.json();
+            return [...this.tasks]; //[...this.tasks] es una forma de crear una copa superficialshallow copy para evitar modificar el principal
+        } catch (error) {
+            console.error('Error al obtener las tareas:', error);
+            throw new Error('Error al conectar con el servidor');
+        }
+    } /* con el metdoso asincrono obtenenemos las tareas
+    desde el servidor, usa fecht para hace un peticion htto a la url y await para que se espera la respues
+    se verifica si fue exitosa .ok es t para estaodos http 200,299
+    si hubo error da un error. y esa respuesta la ponemos en json y se guarda en tareas
+    */
+
+    async createTask(taskData) {
+        try {
+            const newTask = {
+                ...taskData,
+                createdAt: new Date().toISOString()
+            };
+
+            const response = await fetch(this.localURL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newTask)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const createdTask = await response.json();
+            
+            // Actualizar cache local
+            this.tasks.push(createdTask);
+            
+            return createdTask;
+        } catch (error) {
+            console.error('Error al crear la tarea:', error);
+            throw new Error('Error al crear la tarea');
+        }
+    }/* logica de la creacion, usando el spread operator ... se crea un newtask copiando la data de taskdata
+    y se guarda en un formato de fecha ISO
+    luego se hace una peticionn http post a la url al macenada en this.localURL
+    para crear, se indica que se envi el json, body convierte el objeto newtasj
+    en una cada jaon con el metodo .stringify
+    se valida si todo va bien
+    con reonse.jsaon se convierte la respuesta del servidor que bede tener la id y demas datos del formato jason
+    despues actualizo la cache local de tares con this.task para que se 
+    añada al arreglo, devuelvo la cadeda un con id asignado por el servidor
+    manejo erroes por si ocurre un error en la conexion, peticon o convercion
+    */
+
+    async updateTask(id, taskData) {
+        try {
+            const updatedTask = {
+                ...taskData,
+                id: parseInt(id), // Asegurar que el ID sea número
+                updatedAt: new Date().toISOString()
+            };
+
+            const response = await fetch(`${this.localURL}/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedTask)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            
+            // Actualizar cache local inmediatamente
+            const index = this.tasks.findIndex(task => task.id == id);
+            if (index !== -1) {
+                this.tasks[index] = result;
+            }
+            
+            return result;
+        } catch (error) {
+            console.error('Error al actualizar la tarea:', error);
+            throw new Error('Error al actualizar la tarea');
+        }
+    }
+/* este etodo asincrono va a reccibir un id, un objeto con los datos nuevo de la tarea
+creamo un nuevo objeto, se copian los datos de taskdata, se asgura quel el id se un numero con el merto parseInt(id)
+que basicamente interpreta como un nmero entero, añado un campo para actualizar fecha y hora actual para registrar la modificacion
+envio una pecioncion al metodo put a la url con el id de la tarea que se va a actualizar
+, remplaza el la tarea existente del servirdor con el contenido nuevo}valido su todo va bien
+proceso la respuesya en json que contiene la version difnal de la tarea ya actualizada en el servidor
+para la actulizacion del cache local, se busca la tares,  findIndex() en JavaScript se utiliza para encontrar el índice del primer elemento de un arreglo que cumpla con una condición
+== es el operador de comparación no estricta, también llamado "igualdad débil"
+     intenta convertir automáticamente los tipos si son diferentes antes de compararlos.
+si el indice es diferente que -1 siginicia que se reeemplaza esa tarea con el resultado
+actualizado
+ !== es el operador de desigualdad estrictaCompara dos valores y devuelve true si son diferentes en tipo o en valor (sin conversión de tipos)
+     */
+    async deleteTask(id) {
+        try {
+            const response = await fetch(`${this.localURL}/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            // Actualizar cache local
+            this.tasks = this.tasks.filter(task => task.id != id);
+            
+            return true;
+        } catch (error) {
+            console.error('Error al eliminar la tarea:', error);
+            throw new Error('Error al eliminar la tarea');
+        }
+    }
+/* metodo asincrono para eliminar una tarea, recibe un id
+    hace una peticion http delete a la url con el id de la tarea que se va a eliminar
+    se vericia si todo fe bien, actualizao el cacje
+    Se filtra el arreglo this.tasks para eliminar la tarea cuyo id coincida con el proporcionado.
+    != es el operador de desigualdad no estricta (también llamado desigualdad débil)
+    */
+    async loadInitialData() {
+        try {
+            console.log('Conectando con json-server...');
+            await this.getAllTasks();
+            console.log(`✅ Conectado con json-server local - ${this.tasks.length} tareas cargadas`);
+        } catch (error) {
+            console.error('Error al conectar con json-server:', error);
+            
+            // Fallback: datos de ejemplo en memoria
+            this.tasks = [
+                {
+                    id: 1,
+                    titulo: 'Tarea de ejemplo 1',
+                    descripcion: 'Esta es una tarea de ejemplo mientras no hay conexión con el servidor',
+                    estado: 'pendiente',
+                    responsable: 'Usuario',
+                    prioridad: 'media',
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: 2,
+                    titulo: 'Tarea de ejemplo 2',
+                    descripcion: 'Otra tarea de ejemplo',
+                    estado: 'en progreso',
+                    responsable: 'Usuario',
+                    prioridad: 'alta',
+                    createdAt: new Date().toISOString()
+                }
+            ];
+            
+            console.log('Cargadas tareas de ejemplo (sin conexión al servidor)');
+            throw error; // Re-lanzar para que TaskManager pueda manejarlo
+        }
+    }
+
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+}/* esta metodo asincrono se encarga de cargar lo nicales al cargar la aplicacion
+llama el metodo para obtener todoas la tares, se imprimecuantas se obtuvieron, y las cuenta cuantas son si falla se pasa al cacht
+ y asigno un arreglo con dos tareas de ejemplo con las propiesdas tasks  
+ throw interrumpe la ejecución normal y lanza un error.
+
+error es el objeto o valor que quieres lanzar (usualmente un objeto de tipo Error)
+despues pongo un delay en milisegundos, que devuelve una promes para pausar
+ Para pausar o retrasar la ejecución asíncrona sin bloquear el hilo principal.
+*/
+
+class TaskManager {
+    constructor() {
+        this.api = new TaskAPI();
+        this.currentFilter = { estado: '', responsable: '', prioridad: '' };
+        this.editingTaskId = null;
+        this.taskToDelete = null;
+        this.draggedTask = null; 
+        this.init();
+    }
+
+    async init() {
+        try {
+            await this.api.loadInitialData();
+            await this.loadTasks();
+            this.setupEventListeners();
+            this.setupDragAndDrop();
+            this.loadTheme();
+        } catch (error) {
+            this.showNotification('Servidor no disponible. Usando datos de ejemplo.', 'warning');
+            this.renderTasks(this.api.tasks);
+            this.setupEventListeners();
+            this.setupDragAndDrop();
+            this.loadTheme();
+        }
+    }
+/* 
+creo una clase para centralizar la logica de la app, 
+ carga datos, maneja filtros, ediciones, borrados y eventos del usuario
+constructor() es un método especial dentro de una clase que se ejecuta automáticamente cuando creas (instancias) un nuevo objeto de esa clase
+async init() s el inicio de la aplicación
+Carga los datos iniciales desde la API (intenta servidor y si falla, carga datos de ejemplo) con await this.api.loadInitialData()
+
+Luego llama a await this.loadTasks() para mostrar las tareas (probablemente con algún filtro o procesamiento)
+
+Configura los eventos de interacción (clicks, formularios, botones, etc.) con setupEventListeners()
+
+Configura la funcionalidad de drag & drop con setupDragAndDrop()
+
+Carga el tema visual o estilo preferido con loadTheme()
+
+En caso de que falle la carga inicial (catch
+    */
+
+    async loadTasks() {
+        try {
+            this.showLoading();
+            const tasks = await this.api.getAllTasks();
+            this.renderTasks(tasks);
+            this.updateFilters();
+        } catch (error) {
+            this.showNotification('Error al cargar las tareas', 'error');
+            // Mostrar tareas en cache si falla la recarga
+            this.renderTasks(this.api.tasks);
+        } finally {
+            this.hideLoading();
+        }
+    }
+/* 
+este metodo asincrono se encarga de cargar las tareas desde la api en la interfaz
+this.showLoading()
+Muestra un indicador visual (spinner, barra, texto, etc.) para informar al usuario que la carga está en proceso
+const tasks = await this.api.getAllTasks();
+Llama al método getAllTasks() de la instancia TaskAPI
+Esta función se conecta al servidor para obtener todas las tareas
+this.renderTasks(tasks)  en la interfaz
+this.updateFilters();
+Actualiza los filtros visuales o de estado de la interfaz según las tareas cargadas
+this.hideLoading();
+Se ejecuta siempre, haya habido éxito o error
+Oculta el indicador de carga para mostrar la interfaz lista para interactuar    */
+
+    renderTasks(tasks = null) {
+        const tasksToRender = tasks || this.api.tasks;
+        const filteredTasks = this.filterTasks(tasksToRender);
+        
+        // Limpiar columnas
+        ['pendiente', 'en progreso', 'terminada'].forEach(estado => {
+            const container = document.getElementById(`tasks-${estado}`);
+            if (container) container.innerHTML = '';
+        });
+
+        // Agrupar por estado
+        const tasksByStatus = {
+            'pendiente': filteredTasks.filter(task => task.estado === 'pendiente'),
+            'en progreso': filteredTasks.filter(task => task.estado === 'en progreso'),
+            'terminada': filteredTasks.filter(task => task.estado === 'terminada')
+        };
+
+        // Renderizar cada grupo
+        Object.entries(tasksByStatus).forEach(([estado, statusTasks]) => {
+            const container = document.getElementById(`tasks-${estado}`);
+            const countElement = document.getElementById(`count-${estado}`);
+            
+            if (countElement) countElement.textContent = statusTasks.length;
+            
+            if (container) {
+                statusTasks.forEach(task => {
+                    container.appendChild(this.createTaskCard(task));
+                });
+            }
+        });
+
+        // Reconfigurar drag and drop después de renderizar
+        this.setupDragAndDrop();
+    }
+/* 
+este metodos va recirivi un arreglo de tareas o null, si es null se usa el arreglo de tareas de la api
+aqui obtiene las tareas o las de la lista almacenada
+luego filtro las tareas con el metodo filterTasks()
+limpiar las columnas de la ui para mostras las tareas agrupas
+lo limpio para evitar acumulacion de tareas vienas en el html
+creo un objeto donde cada propiedad es un estado que tiene un arreglo con las tareas del dichoso estado
+Object.entries() va a renderizar por gurpo
+se obtiene el contenedor de tares un un elemenato para mostrar el conteo
+appendChild es un método en JavaScript que se usa para agregar un nodo (elemento, texto, etc.) como hijo al final de otro nodo en el DOM 
+Crea dinámicamente una "tarjeta" o representación visual de una tarea y la agrega al contenedor para que se muestre en la página.
+   this.setupDragAndDrop();
+    renderizar, vuelve a configurar el sistema de arrastrar y soltar, porque el DOM cambió
+*/
+    createTaskCard(task) {
+        const card = document.createElement('div');
+        card.className = 'task-card';
+        card.draggable = true;
+        card.dataset.taskId = task.id;
+        
+        const priorityClass = task.prioridad || 'media';
+        
+        card.innerHTML = `
+            <div class="task-header">
+                <h3 class="task-title">${this.escapeHtml(task.titulo)}</h3>
+                <div class="task-actions">
+                    <button class="task-btn edit-btn" data-id="${task.id}" title="Editar">✏️</button>
+                    <button class="task-btn delete-btn" data-id="${task.id}" title="Eliminar">🗑️</button>
+                </div>
+            </div>
+            <p class="task-description">${this.escapeHtml(task.descripcion)}</p>
+            <div class="task-footer">
+                <span class="task-responsible">👤 ${this.escapeHtml(task.responsable)}</span>
+                <span class="priority-badge priority-${priorityClass}">${priorityClass.toUpperCase()}</span>
+            </div>
+        `;
+/* 
+crear un div con toda la información y controles visuales de una tarea, con soporte para drag & drop, edición y eliminación.
+crea un div visual que sera la pargeta en card, le asigana una clase para el css
+con t hace que se pueda arratrar, y se lamacena el ID
+dtermina la prioridad de la clase, si no tiene se le pone media como predeterminado
+.escapeHtml es un método que escapa caracteres especiales para evitar inyecciones de HTML
+ Convertir caracteres especiales (como <, >, ", ', &) a sus equivalentes seguros para que no se interpreten como HTML cuando los insertas en el DOM.  
+ .stopPropagation() es un método del objeto Event en JavaScript que detiene la propagación del evento por la cadena de elementos del DOM
+ el evento no se seguirá enviando a los elementos padres
+ */
+        card.querySelector('.edit-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.editTask(task.id);
+        });
+
+        card.querySelector('.delete-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.showDeleteConfirm(task.id);
+        });
+
+        return card;
+    }
+/* 
+filtra las tareas según los criterios actuales de búsqueda establecidos en this.currentFilter, y devuelve solo las que coinciden
+Son del mismo tipo, y Tienen el mismo valor
+estadoMatch:
+Si this.currentFilter.estado está vacío, coincide con todos.
+Si está definido (por ejemplo "pendiente"), compara con task.estado.
+responsableMatch:
+Si this.currentFilter.responsable está vacío, coincide con todos.
+Si no, busca que el nombre del responsable contenga (de forma insensible a mayúsculas/minúsculas) lo escrito.
+prioridadMatch:
+Similar a estadoMatch, pero con el campo prioridad.
+*/
+    filterTasks(tasks) {
+        return tasks.filter(task => {
+            const estadoMatch = !this.currentFilter.estado || task.estado === this.currentFilter.estado;
+            const responsableMatch = !this.currentFilter.responsable || 
+                task.responsable.toLowerCase().includes(this.currentFilter.responsable.toLowerCase());
+            const prioridadMatch = !this.currentFilter.prioridad || task.prioridad === this.currentFilter.prioridad;
+            
+            return estadoMatch && responsableMatch && prioridadMatch;
+        });
+    }
+/* 
+controla el flujo completo para crear una nueva tarea desde la interfaz
+muestra una animación de carga, llama al API, recarga las tareas y da retroalimentación al usuario
+    */
+    async createTask(taskData) {
+        try {
+            this.showLoading();
+            await this.api.createTask(taskData);
+            this.showNotification('Tarea creada exitosamente', 'success');
+            await this.loadTasks();
+            this.resetForm();
+        } catch (error) {
+            this.showNotification('rror al crear la tarea: ' + error.message, 'error');
+        } finally {
+            this.hideLoading();
+        }
+    }
+/* 
+
+método se encarga de actualizar una tarea existente usando la API y luego reflejar ese cambio en la interfaz
+
+    */
+    async updateTask(id, taskData) {
+        try {
+            this.showLoading();
+            await this.api.updateTask(id, taskData);
+            // Llama al método del API que actualiza la tarea en json-server
+            this.showNotification('Tarea actualizada exitosamente', 'success');
+            await this.loadTasks();
+            this.resetForm();
+            this.editingTaskId = null;
+             // Indica que ya no se está editando ninguna tarea
+        } catch (error) {
+            this.showNotification('Error al actualizar la tarea: ' + error.message, 'error');
+        } finally {
+            this.hideLoading();
+        }
+    }
+/* 
+se encarga de eliminar una tarea específica por su ID
+    */
+    async deleteTask(id) {
+        try {
+            this.showLoading();
+            await this.api.deleteTask(id);
+            this.showNotification('Tarea eliminada exitosamente', 'success');
+            await this.loadTasks();
+        } catch (error) {
+            this.showNotification(' Error al eliminar la tarea: ' + error.message, 'error');
+        } finally {
+            this.hideLoading();
+        }
+    }
+/* 
+Este método moveTask(taskId, newState) de la clase TaskManager se encarga de mover una tarea a un nuevo estado
+
+    */
+
+    async moveTask(taskId, newState) {
+        const task = this.api.tasks.find(t => t.id == taskId);
+        if (!task || task.estado === newState) return;
+
+        const originalState = task.estado;
+        
+        try {
+            // Actualizar UI inmediatamente 
+            this.updateTaskStateInUI(taskId, newState);
+            
+            // Actualizar en el servidor
+            const updatedTask = { ...task, estado: newState };
+            await this.api.updateTask(taskId, updatedTask);
+            
+            this.showNotification(`Tarea movida a "${newState}"`, 'success');
+            
+            // Recargar para sincronizar con el servidor
+            setTimeout(() => this.renderTasks(), 500);
+            
+        } catch (error) {
+            // Revertir cambios en caso de error
+            this.updateTaskStateInUI(taskId, originalState);
+            console.error('Error al mover tarea:', error);
+            this.showNotification('Error al mover la tarea', 'error');
+        }
+    }
+/* 
+Actualizar inmediatamente la interfaz visual para reflejar el cambio de estado de una tarea, sin esperar a la respuesta del servidor
+usca en el DOM el elemento que representa la tarjeta de la tarea mediante el atributo personalizado data-task-id igual al ID de la tarea
+Actualizar tarea en cache local
+Busca la columna HTML correspondiente al nuevo estad, si existe se crear una nueva targeta en esa columna
+Actualiza los contadores visuales que indican cuántas tareas hay en cada columna
+    */
+
+    updateTaskStateInUI(taskId, newState) {
+        const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
+        if (taskCard) {
+            // Remover de la columna actual
+            taskCard.remove();
+            
+            const taskIndex = this.api.tasks.findIndex(t => t.id == taskId);
+            if (taskIndex !== -1) {
+                this.api.tasks[taskIndex].estado = newState;
+                
+                const newContainer = document.getElementById(`tasks-${newState}`);
+                if (newContainer) {
+                    newContainer.appendChild(this.createTaskCard(this.api.tasks[taskIndex]));
+                }
+            }
+            
+            this.updateColumnCounts();
+        }
+    }
+/* 
+Actualizar los contadores visibles que indican cuántas tareas hay en cada columna de estado
+   Cuenta cuántos hijos tiene el contenedor, es decir, cuántas tarjetas de tarea están dentro (cada tarea es un hijo)
+  Actualiza el texto del contador para mostrar el número actual  
+*/
+    // Actualizar contadores de columnas
+    updateColumnCounts() {
+        ['pendiente', 'en progreso', 'terminada'].forEach(estado => {
+            const container = document.getElementById(`tasks-${estado}`);
+            const countElement = document.getElementById(`count-${estado}`);
+            
+            if (container && countElement) {//Asegura que ambos elementos existan en el DOM antes de procede
+                const count = container.children.length;
+                countElement.textContent = count;
+            }
+        });
+    }
+/* 
+Preparar la interfaz para editar una tarea existente, llenando un formulario
+con los datos actuales de la tarea y 
+ajustando botones para que el usuario pueda actualizarla o cancelar
+Resetea la variable editingTaskId a null, indicando que ya no hay ninguna tarea en edición
+Mostrar un modal (ventana emergente) para confirmar la eliminación de una tarea
+    async confirmDelete()  Confirmar y ejecutar la eliminación de una tarea
+*/
+    editTask(id) {
+        const task = this.api.tasks.find(t => t.id == id);
+        if (!task) return;//Si no existe esa tarea, no hace nada y termina.
+
+        const form = document.getElementById('taskForm');
+        if (form) {
+            document.getElementById('titulo').value = task.titulo;
+            document.getElementById('descripcion').value = task.descripcion;
+            document.getElementById('estado').value = task.estado;
+            document.getElementById('responsable').value = task.responsable;
+            document.getElementById('prioridad').value = task.prioridad || 'media';
+
+            // Cambiar el botón, osea Obtiene los botone
+            const submitBtn = document.getElementById('submitBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            
+            if (submitBtn) {//Cambia el texto del botón enviar para que diga “Actualizar Tarea”
+                submitBtn.textContent = 'Actualizar Tarea';
+                submitBtn.className = 'btn btn-secondary';
+            }
+            
+            if (cancelBtn) {
+                cancelBtn.style.display = 'block';
+            }
+
+            this.editingTaskId = id;
+
+            form.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+    cancelEdit() {
+        this.editingTaskId = null;
+        this.resetForm();
+    }
+
+    showDeleteConfirm(id) {
+        this.taskToDelete = id;
+        const modal = document.getElementById('confirmModal');
+        if (modal) {
+            modal.classList.add('show');
+        }
+    }
+
+    hideModal() {
+        const modal = document.getElementById('confirmModal');
+        if (modal) {
+            modal.classList.remove('show');
+        }
+        this.taskToDelete = null;
+    }
+
+    async confirmDelete() {
+        if (this.taskToDelete) {
+            await this.deleteTask(this.taskToDelete);
+            this.hideModal();
+        }
+    }
+/* 
+se limpia y resetea el formulario para una nueva tarea
+cambio el boton para que digra crear tarea
+oculto el botno eliminar qeu solo aparece cuando se edita una tarea
+ Reinicia la variable que indica si estás editando alguna tarea, p
+ orque ahora no se está editando ninguna
+    */
+    resetForm() {
+        const form = document.getElementById('taskForm');
+        if (form) {
+            form.reset();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            
+            if (submitBtn) {
+                submitBtn.textContent = 'Crear Tarea';
+                submitBtn.className = 'btn btn-primary';
+            }
+            
+            if (cancelBtn) {
+                cancelBtn.style.display = 'none';
+            }
+            
+            this.editingTaskId = null;
+        }
+    }
+/* 
+actualiza el filtro de responsables en el 
+DOM basándose en las tareas cargadas
+usamo set para obtener una lista unica de responsables sin duplicados
+Crea un elemento <select> con opciones para cada responsable encontrado
+con una opción por defecto
+    */
+    updateFilters() {
+        const responsables = [...new Set(this.api.tasks.map(task => task.responsable))];
+        const select = document.getElementById('filterResponsible');
+        
+        if (select) {
+            select.innerHTML = '<option value="">Todos los responsables</option>';
+            responsables.forEach(responsable => {
+                const option = document.createElement('option');
+                option.value = responsable;
+                option.textContent = responsable;
+                select.appendChild(option);
+            });
+        }
+    }
+/* 
+applyFilters() lee los valores seleccionados en los 
+filtros y actualiza el filtro activo para las tareas
+this.currentFilter es un objeto que asigna los calores de filtro
+? es el operador ternario condición ? valor_si_verdadero : valor_si_falso;
+Si responsableFilter existe (es decir, no es null, undefined, false, 0, etc.),
+→ entonces usa responsableFilter.value.
+Si no existe,
+→ usa la cadena vacía ''
+    */
+    applyFilters() {
+        const responsableFilter = document.getElementById('filterResponsible');
+        const prioridadFilter = document.getElementById('filterPriority');
+        const estadoFilter = document.getElementById('filterStatus');
+
+        this.currentFilter = {
+            responsable: responsableFilter ? responsableFilter.value : '',
+            prioridad: prioridadFilter ? prioridadFilter.value : '',
+            estado: estadoFilter ? estadoFilter.value : ''
+        };
+
+        this.renderTasks();//Re-renderiza la lista de tareas aplicando los nuevos filtros
+    }
+/* 
+restablece todos los filtros a su valor por defecto (vacío)
+    */
+    clearFilters() {
+        const filters = ['filterResponsible', 'filterPriority', 'filterStatus'];
+        filters.forEach(filterId => {
+            const element = document.getElementById(filterId);
+            if (element) element.value = '';
+        });
+        
+        this.currentFilter = { estado: '', responsable: '', prioridad: '' };
+        this.renderTasks();
+    }
+/* 
+el sistema de arrastrar y soltar (Drag & Drop) para mover tareas entre columnas
+setupDragAndDrop() inicia todo el ssitema de drag and droppor tareas
+primero remuevo liteners anterios paraevitar duplicados, selecciono
+columnas y targetas, yacrego listenrs
+para columnas y targetas y prevenir comportamiento por fedecto: 
+dragover Permitir que un elemento sea un destino válido para soltar
+dragenter Aplicar un estilo visual temporal (por ejemplo, un borde de color) para indicar que el área acepta el elemento
+dragleave Cuando el elemento arrastrado sale del contenedor sin ser soltado
+dragstart, dragend;   Cuando empieza a arrastrarse un elemento
+  Cuando se suelta el elemento (ya sea exitosamente o no)
+.classList es una propiedad de los elementos HTML que te permite manipular sus clases CSS
+*/
+    setupDragAndDrop() {
+        this.removeDragListeners();
+        
+        const columns = document.querySelectorAll('.tasks-container');
+        const taskCards = document.querySelectorAll('.task-card');
+        
+        // Configurar zonas de drop (columnas)
+        columns.forEach(column => {
+            column.addEventListener('dragover', this.handleDragOver.bind(this));
+            column.addEventListener('dragenter', this.handleDragEnter.bind(this));
+            column.addEventListener('dragleave', this.handleDragLeave.bind(this));
+            column.addEventListener('drop', this.handleDrop.bind(this));
+        });
+
+        // Configurar elementos arrastrables (tarjetas)
+        taskCards.forEach(card => {
+            card.addEventListener('dragstart', this.handleDragStart.bind(this));
+            card.addEventListener('dragend', this.handleDragEnd.bind(this));
+        });
+
+        console.log(`Drag & Drop configurado para ${taskCards.length} tareas`);
+    }
+// Manejo de eventos de drag & drop
+    handleDragStart(e) {
+        if (e.target.classList.contains('task-card')) {
+            this.draggedTask = e.target;
+            e.target.classList.add('dragging');//Le agrega la clase .dragging
+            e.dataTransfer.setData('text/plain', e.target.dataset.taskId);// setrasdiere el id de la tarea
+            e.dataTransfer.effectAllowed = 'move';
+            
+            // Agregar feedback visual, a todas las columnas, fuerza al dom a re-renderizar
+            setTimeout(() => {
+                const columns = document.querySelectorAll('.tasks-container');
+                columns.forEach(col => col.classList.add('drag-active'));
+            }, 0);
+        }
+    }
+
+    handleDragEnd(e) {//Se ejecuta al soltar o cancelar el arrastre
+        if (e.target.classList.contains('task-card')) {
+            e.target.classList.remove('dragging');
+            this.draggedTask = null;
+            
+            // Remover feedback visual
+            const columns = document.querySelectorAll('.tasks-container');
+            columns.forEach(col => {
+                col.classList.remove('drag-active', 'drop-zone', 'active');
+            });
+        }
+    }
+
+    handleDragOver(e) {// Evita el comportamiento por defecto del navegador
+        e.preventDefault();//bloquea la acción automática que el navegador haría normalmente
+        e.dataTransfer.dropEffect = 'move';
+    }
+
+    handleDragEnter(e) {//Se ejecuta al soltar o cancelar el arrastre
+        e.preventDefault();
+        if (e.currentTarget.classList.contains('tasks-container')) {
+            e.currentTarget.classList.add('drop-zone', 'active');
+        }
+    }
+//handleDragEnter(e):Se activa al entrar en una columna con un elemento arrastrado
+//handleDragLeave(e)Se activa al salir del área de una columna
+
+    handleDragLeave(e) {
+        // Solo remover si realmente salimos del contenedor
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+            e.currentTarget.classList.remove('drop-zone', 'active');
+        }
+        /* 
+handleDragLeave(e) está bien diseñado para evitar eliminar estilos de zona activa si aún estamos dentro de la columna, 
+lo cual es importante para evitar "parpadeos visuales"
+    */
+    }
+/* 
+handleDrop(e); limpia los estilos vizuales
+estrear el taskid u el nuevo estado de la traformacion
+llama a movetask para sincronizar la ui y el servidor
+Busca la primera ocurrencia del texto 'tasks-' dentro del string y la reemplaza por '' (cadena vacía).
+Es decir, elimina el texto 'tasks-' del string
+    */
+    async handleDrop(e) {
+        e.preventDefault();
+        const column = e.currentTarget;
+        column.classList.remove('drop-zone', 'active');
+        
+        const taskId = e.dataTransfer.getData('text/plain');
+        const newState = column.id.replace('tasks-', '');
+        
+        if (taskId && newState) {
+            console.log(`Moviendo tarea ${taskId} a estado: ${newState}`);
+            await this.moveTask(taskId, newState);
+        }
+    }
+/* 
+Remover listeners anteriores para evitar duplicados
+    */
+    removeDragListeners() {
+        const columns = document.querySelectorAll('.tasks-container');
+        const taskCards = document.querySelectorAll('.task-card');
+        
+        columns.forEach(column => {
+            column.classList.remove('drag-active', 'drop-zone', 'active');
+        });
+        
+        taskCards.forEach(card => {
+            card.classList.remove('dragging');
+        });
+    }
+/* 
+alternar entre modo oscuro y claro, y además guarda la preferencia en sessionStorage
+
+    */
+    toggleTheme() {
+        document.body.classList.toggle('dark-theme');
+        const isDark = document.body.classList.contains('dark-theme');
+        const themeBtn = document.getElementById('themeToggle');
+        
+        if (themeBtn) {//verifica si esites, y se camvia el texto biblise en el html
+            themeBtn.textContent = isDark ? ' Modo Claro' : 'Modo Oscuro';
+        }
+        
+        // Guardar preferencia en sessionStorage
+        sessionStorage.setItem('darkTheme', isDark);
+    }
+
+    loadTheme() {
+        const isDark = sessionStorage.getItem('darkTheme') === 'true';
+        if (isDark) {
+            document.body.classList.add('dark-theme');
+            const themeBtn = document.getElementById('themeToggle');
+            if (themeBtn) {
+                themeBtn.textContent = 'Modo Claro';
+            }
+        }
+    }
+/* 
+sessionStorage se borra al cerrar la pestaña
+Recupera un valor guardado en sessionStorage bajo la clave 'darkTheme'
+ocument.body.classList.add('dark-theme');
+Agrega la clase CSS 
+const themeBtn = document.getElementById('themeToggle');
+Busca en el DOM un elemento con id 'themeToggle'
+if (themeBtn) { themeBtn.textContent = 'Modo Claro'; }
+Si el botón existe, cambia su texto visible a 'Modo Claro'
+    */
+    showNotification(message, type) {
+        const notification = document.getElementById('notification');
+        if (notification) {
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        } else {
+            // Fallback si no existe el elemento notification
+            console.log(`${type.toUpperCase()}: ${message}`);
+        }
+    }
+/* 
+ostrar un indicador de carga centrado
+1. Buscar un contenedor para el tablero de tareas.
+rimero intenta obtener el elemento con id 'task-board'.
+Si no existe, busca el primer elemento con clase 'board'.
+2. Verificar que exista el contenedor y que no haya ya un elemento con clase 'loading' en el DOM,
+para evitar crear múltiples indicadores de carga simultáneos
+3. Crear un nuevo elemento <div> que será el indicador de carga
+ 4. Asignar la clase CSS
+ Insertar contenido HTML dentro del div con el texto "Cargando...".
+  Definir estilos CSS 
+  agregar el elemento cargador como hijo del body del documento,
+ra que sea visible al usuario.
+    */
+    showLoading() {
+        const board = document.getElementById('task-board') || document.querySelector('.board');
+        if (board && !document.querySelector('.loading')) {
+            const loading = document.createElement('div');
+            loading.className = 'loading';
+            loading.innerHTML = 'Cargando...';
+            loading.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0,0,0,0.8);
+                color: white;
+                padding: 20px;
+                border-radius: 8px;
+                z-index: 1000;
+                font-size: 16px;
+            `;
+            document.body.appendChild(loading);
+        }
+    }
+
+    hideLoading() {
+        const loading = document.querySelector('.loading');
+        if (loading) loading.remove();
+    }
+
+    escapeHtml(text) {//Esto es una forma segura de escapar caracteres especiales que pueden causar problemas o vulnerabilidades si se insertan directamente en HTML
+        const div = document.createElement('div');// convierte < en &lt;, > en &gt;, etc.
+        div.textContent = text;
+        return div.innerHTML;
+    }//Evita ataques de tipo XSS (inyección de código malicioso)
+/* 
+Este método registra todos los listeners de eventos necesarios 
+para que la interfaz del sistema funcione correctamente
+    */
+    setupEventListeners() {
+        // Formulario de tareas:Escucha el evento de envío del formulario para crear o actualizar tareas
+        const taskForm = document.getElementById('taskForm');
+        if (taskForm) {
+            taskForm.addEventListener('submit', (e) => this.handleFormSubmit(e));
+        }
+
+        // Botón cancelar: Si el usuario está editando una tarea y presiona "Cancelar", se limpia el formulario 
+        const cancelBtn = document.getElementById('cancelBtn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => this.cancelEdit());
+        }
+
+        // Botón de tema
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => this.toggleTheme());
+        }
+
+        // Filtros: Cuando el usuario cambia el valor de los filtros, se aplica la lógica
+        const filterResponsible = document.getElementById('filterResponsible');
+        if (filterResponsible) {
+            filterResponsible.addEventListener('change', () => this.applyFilters());
+        }
+
+        const filterPriority = document.getElementById('filterPriority');
+        if (filterPriority) {
+            filterPriority.addEventListener('change', () => this.applyFilters());
+        }
+
+        const filterStatus = document.getElementById('filterStatus');
+        if (filterStatus) {
+            filterStatus.addEventListener('change', () => this.applyFilters());
+        }
+
+        const clearFilters = document.getElementById('clearFilters');
+        if (clearFilters) {
+            clearFilters.addEventListener('click', () => this.clearFilters());
+        }
+
+        // Botones del modal de confirmación
+        const modalClose = document.getElementById('confirmCancel');
+        if (modalClose) {
+            modalClose.addEventListener('click', () => this.hideModal());
+        }
+
+        const modalConfirm = document.getElementById('confirmDelete');
+        if (modalConfirm) {
+            modalConfirm.addEventListener('click', () => this.confirmDelete());
+        }
+
+        // Cerrar modal con Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.hideModal();
+            }
+        });
+
+        // Cerrar modal al hacer clic fuera: (sobre el fondo del modal), se cierra el modal
+        const confirmModal = document.getElementById('confirmModal');
+        if (confirmModal) {
+            confirmModal.addEventListener('click', (e) => {
+                if (e.target.id === 'confirmModal') {
+                    this.hideModal();
+                }
+            });
+        }
+    }
+// recoger los datos del formulario, validarlos, y decidir si crea una nueva tarea o actualiza una existente
+    handleFormSubmit(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);//targetea un elemento especifico del dom
+        const taskData = {
+            titulo: formData.get('titulo').trim(),
+            descripcion: formData.get('descripcion').trim(),
+            estado: formData.get('estado'),
+            responsable: formData.get('responsable').trim(),
+            prioridad: formData.get('prioridad') || 'media'
+        };
+
+        // Validaciones
+        if (!this.validateTaskData(taskData)) {
+            return;
+        }
+
+        if (this.editingTaskId) {
+            // Actualizar tarea existente
+            this.updateTask(this.editingTaskId, taskData);
+        } else {
+            // Crear nueva tarea
+            this.createTask(taskData);
+        }
+    }
+//&& || son operadores lógicos en JavaScript. Se usa el operador || (OR) porque basta que una de las condiciones sea verdadera para considerar 
+    validateTaskData(data) {
+        const errors = [];
+
+        if (!data.titulo || data.titulo.length < 3) {
+            errors.push('El título debe tener al menos 3 caracteres');
+        }
+
+        if (data.titulo && data.titulo.length > 100) {
+            errors.push('El título no puede exceder 100 caracteres');
+        }
+
+        if (!data.descripcion || data.descripcion.length < 10) {
+            errors.push('La descripción debe tener al menos 10 caracteres');
+        }
+
+        if (data.descripcion && data.descripcion.length > 500) {
+            errors.push('La descripción no puede exceder 500 caracteres');
+        }
+
+        if (!data.responsable || data.responsable.length < 2) {
+            errors.push('El responsable debe tener al menos 2 caracteres');
+        }
+
+        if (data.responsable && data.responsable.length > 50) {
+            errors.push('El responsable no puede exceder 50 caracteres');
+        }
+
+        if (errors.length > 0) {
+            this.showNotification('❌ ' + errors.join('. '), 'error');
+            return false;
+        }
+
+        return true;
+    }
+}
+
+//Este evento se dispara cuando todo el HTML ha sido completamente cargado y procesado
+document.addEventListener('DOMContentLoaded', () => {
+    window.taskManager = new TaskManager();
+});//window.taskManager: Guarda una instancia en el objeto global window, lo que la hace accesible desde la consola del navegador o desde cualquier otro script
+//Se guarda una instancia de TaskManager en window.taskManager
+// Exportar para uso global
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { TaskManager, TaskAPI };
+}
+// es una comprobación común en JavaScript para hacer que un archivo funcione tanto en Node.js como en el navegador
+//typeof module !== 'undefined' Esto evita errores si el script se ejecuta en un navegador
+//{ TaskManager, TaskAPI }Está exportando esos dos objetos para que puedan ser usados en otros archivos de Node.js.
